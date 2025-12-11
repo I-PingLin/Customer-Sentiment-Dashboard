@@ -1,0 +1,87 @@
+
+<main class="min-h-screen bg-slate-100 p-4 sm:p-6 lg:p-8">
+  <div class="max-w-7xl mx-auto">
+    
+    <header class="text-center mb-8">
+      <h1 class="text-4xl sm:text-5xl font-bold text-slate-800">Customer Sentiment Dashboard</h1>
+      <p class="mt-2 text-lg text-slate-600">Paste customer reviews to generate an AI-powered analysis.</p>
+    </header>
+
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <label for="reviews-input" class="block text-sm font-medium text-slate-700 mb-2">
+        Paste your raw text reviews here (one review per line is best):
+      </label>
+      <textarea 
+        id="reviews-input"
+        rows="10"
+        class="block w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-4"
+        placeholder="e.g., The product is fantastic!&#10;I had an issue with shipping, but support was great."
+        [value]="reviewsText()"
+        (input)="handleTextareaInput($event)">
+      </textarea>
+      <div class="mt-4 flex justify-end">
+        <button 
+          (click)="analyzeReviews()"
+          [disabled]="isLoading() || !reviewsText().trim()"
+          class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300 disabled:cursor-not-allowed transition-colors">
+          @if (isLoading()) {
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Analyzing...</span>
+          } @else {
+            <span>Generate Report</span>
+          }
+        </button>
+      </div>
+    </div>
+
+    @if (error()) {
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
+        <strong class="font-bold">Error:</strong>
+        <span class="block sm:inline ml-2">{{ error() }}</span>
+      </div>
+    }
+
+    @if (analysisReport(); as report) {
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
+        
+        <!-- Executive Summary -->
+        <div class="lg:col-span-3 bg-white rounded-2xl shadow-lg p-6">
+          <h2 class="text-2xl font-bold text-slate-800 mb-4">AI Executive Summary</h2>
+          <div class="prose prose-slate max-w-none whitespace-pre-wrap">{{ report.executiveSummary }}</div>
+        </div>
+        
+        <!-- Sentiment Trend -->
+        <div class="lg:col-span-3 bg-white rounded-2xl shadow-lg p-6">
+          <h2 class="text-2xl font-bold text-slate-800 mb-4">Sentiment Trend Over Time</h2>
+          <app-sentiment-chart [data]="report.sentimentTrend" />
+        </div>
+
+        <!-- Positive Word Cloud -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 h-96">
+          <h2 class="text-2xl font-bold text-green-600 mb-4">Top Praises</h2>
+          <app-word-cloud [words]="report.wordClouds.positive" [colorScale]="positiveColors" />
+        </div>
+        
+        <!-- Negative Word Cloud -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 h-96 lg:col-span-2">
+           <h2 class="text-2xl font-bold text-red-600 mb-4">Top Complaints</h2>
+           <app-word-cloud [words]="report.wordClouds.negative" [colorScale]="negativeColors" />
+        </div>
+        
+      </div>
+    }
+
+  </div>
+</main>
+<style>
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
